@@ -35,7 +35,6 @@ jobs:
     - name: Deploy to IBM i
       run: | 
         ici \
-          --cmd "mkdir -p '$remote_build_dir'" \
           --rcwd "$remote_build_dir" \
           --push "." \
           --cmd "/QOpenSys/pkgs/bin/gmake -C ile BUILDLIB=MZNCI$short_sha uninstall all" \
@@ -70,7 +69,6 @@ jobs:
     - name: Deploy to IBM i
       run: | 
         ici \
-          --cmd "mkdir -p '$remote_build_dir'" \
           --rcwd "$remote_build_dir" \
           --push "." \
           --cmd "/QOpenSys/pkgs/bin/gmake --jobs=1 manzan-installer-v$short_sha.jar" \
