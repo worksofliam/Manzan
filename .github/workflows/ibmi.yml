@@ -74,7 +74,7 @@ jobs:
           --rcwd "$remote_build_dir" \
           --push "." \
           --cmd "/QOpenSys/pkgs/bin/gmake --jobs=1 manzan-installer-${{ github.ref_name }}.jar" \
-          --get "manzan-installer-${{ github.ref_name }}.jar" \
+          --get "manzan-installer-${{ github.ref_name }}.jar" "." \
           --ignore --cl "dltlib MANZANBLD" \
           --ignore --cl "dltlib MANZAN" \
           --rcwd ".." \
