@@ -2,6 +2,7 @@ BUILDLIB:=MANZAN
 BUILDVERSION:="Development build \(built with Make\)"
 
 # Hello world
+ASDAD
 
 all: init /qsys.lib/${BUILDLIB}.lib/handler.pgm
 
