@@ -18,43 +18,33 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - name: Install private key
-      run: |
-        mkdir -p ~/.ssh
-        chmod 0755 ~
-        chmod 0700 ~/.ssh
-        echo  "${{ secrets.IBMI_BUILD_PVTKEY }}" > ~/.ssh/id_rsa
-        chmod 0600 ~/.ssh/id_rsa
-    - name: Disable strict host key checking
-      run: |
-        echo "Host *" > ~/.ssh/config
-        echo "  StrictHostKeyChecking no" >> ~/.ssh/config
-    - name: Create build sandbox
-      run: $ssh_command "mkdir -p $remote_build_dir"
-    - name: Clean up unnecessary files
-      run: rm -fr ./.git ./docs
-    - name: Populate build sandbox
-      run: $rsync_command
+
+    - uses: actions/setup-node@v4
+      with:
+        always-auth: true
+        node-version: 18
+
+    - run: npm i -g @ibm/ibmi-ci
+
     - name: Get short SHA ID
       run: |
-        echo "short_sha=$(echo ${{ github.sha }} | head -c 7)" >> $GITHUB_ENV
+        echo "short_sha=$(echo ${{ github.sha }} | head -c 5)" >> $GITHUB_ENV
         cat $GITHUB_ENV
-    - name: Perform remote build
-      run: $ssh_command "cd $remote_build_dir && /QOpenSys/pkgs/bin/gmake --jobs=1 manzan-installer-${{ github.ref_name }}.jar"
-    - name: Retrieve artifact
-      run: $scp_dist_command
-    - name: Cleanup remote build lib
-      if: always()
-      run: $ssh_command "system 'dltlib MANZANBLD' || echo 'could not delete build lib'"
-    - name: Cleanup remote dist lib
-      if: always()
-      run: $ssh_command "system 'dltlib manzan'"
-    - name: Cleanup remote build dir
-      if: always()
-      run: $ssh_command "rm -fr $remote_build_dir"
-    - name: Cleanup remote stream file artifacts
-      if: always()
-      run: $ssh_command "rm -fr /QOpenSys/etc/manzan /opt/manzan"
+
+    - name: Deploy to IBM i
+      run: | 
+        ici \
+          --cmd "mkdir -p '$remote_build_dir'" \
+          --rcwd "$remote_build_dir" \
+          --push "." \
+          --cmd "/QOpenSys/pkgs/bin/gmake --jobs=1 manzan-installer-${{ github.ref_name }}.jar" \
+          --get "manzan-installer-${{ github.ref_name }}.jar" \
+          --ignore --cl "dltlib MANZANBLD" \
+          --ignore --cl "dltlib MANZAN" \
+          --rcwd ".." \
+          --ignore --cmd "rm -fr $remote_build_dir"
+          --cmd "rm -fr /QOpenSys/etc/manzan /opt/manzan"
+        
     - name: Create the release
       id: create_release
       uses: actions/create-release@v1
